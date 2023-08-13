@@ -1,34 +1,32 @@
 "use client";
 
-import * as z from "zod";
+import { z } from "zod";
 import Image from "next/image";
 import { useForm } from "react-hook-form";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+
 import {
     Form,
     FormControl,
     FormField,
     FormItem,
     FormLabel,
-    FormMessage,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/Input";
+
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+
 import { CommentValidation } from "@/lib/validations/thread";
-// import { createThread } from "@/lib/actions/thread.actions";
-
-
+import { addCommentToThread } from "@/lib/actions/thread.actions";
 
 interface Props {
-    threadId: string
-    currentUserImg: string
-    currentUserId: string
-
+    threadId: string;
+    currentUserImg: string;
+    currentUserId: string;
 }
 
-const Comment = ({ currentUserId, currentUserImg, threadId }: Props) => {
-    const router = useRouter();
+function Comment({ threadId, currentUserImg, currentUserId }: Props) {
     const pathname = usePathname();
 
     const form = useForm<z.infer<typeof CommentValidation>>({
@@ -39,55 +37,51 @@ const Comment = ({ currentUserId, currentUserImg, threadId }: Props) => {
     });
 
     const onSubmit = async (values: z.infer<typeof CommentValidation>) => {
+        await addCommentToThread(
+            threadId,
+            values.thread,
+            JSON.parse(currentUserId),
+            pathname
+        );
 
-        // await createThread({
-
-        //     text: values.thread,
-        //     author: userId,
-        //     communityId: null,
-        //     path: pathname,
-        // });
-        // router.push("/");
+        form.reset();
     };
-
-
 
     return (
         <Form {...form}>
-            <form
-                className='mt-10 flex flex-col justify-start gap-10'
-                onSubmit={form.handleSubmit(onSubmit)}
-            >
-
+            <form className='comment-form' onSubmit={form.handleSubmit(onSubmit)}>
                 <FormField
                     control={form.control}
                     name='thread'
                     render={({ field }) => (
-                        <FormItem className='flex w-full flex-col gap-3'>
-                            <FormLabel className='text-base-semibold text-light-2'>
-                                Content
+                        <FormItem className='flex w-full items-center gap-3'>
+                            <FormLabel>
+                                <Image
+                                    src={currentUserImg}
+                                    alt='current_user'
+                                    width={48}
+                                    height={48}
+                                    className='rounded-full object-cover'
+                                />
                             </FormLabel>
-                            <FormControl className="no-focus border border-dark-4 bg-dark-3 text-light-1">
+                            <FormControl className='border-none bg-transparent'>
                                 <Input
-                                    type="text"
-                                    placeholder="Comment..."
-                                    className="no-focus text-light-1 outline-none"
+                                    type='text'
                                     {...field}
+                                    placeholder='Comment...'
+                                    className='no-focus text-light-1 outline-none'
                                 />
                             </FormControl>
-                            <FormMessage />
                         </FormItem>
                     )}
                 />
 
-
-
-                <Button type='submit' className='bg-primary-500'>
-                    Post Thread
+                <Button type='submit' className='comment-form_btn'>
+                    Reply
                 </Button>
             </form>
         </Form>
-    )
+    );
 }
 
-export default Comment
+export default Comment;
